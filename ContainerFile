@@ -1,0 +1,21 @@
+# Build stage
+FROM golang:latest as Builder
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+
+RUN go mod install
+
+COPY . .
+
+RUN go build -o main .
+
+# Execute stage
+FROM alpine:latest
+
+WORKDIR /root/
+
+COPT --from=Builder /app/main .
+
+CMD ["./main"] # Execute
