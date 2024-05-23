@@ -16,6 +16,6 @@ FROM alpine:latest
 
 WORKDIR /root/
 
-COPT --from=Builder /app/main .
+COPY --from=Builder /app/main .
 
 CMD ["./main"] # Execute
