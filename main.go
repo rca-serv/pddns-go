@@ -148,10 +148,10 @@ func main() {
 
         // Sleep for 30 minutes
         // TODO: 時間を上書きできるようにする
-        time.Sleep(30 * time.Minute)
         fmt.Println("Successfully updated DNS record!")
         fmt.Println("IP: ", localIP)
         fmt.Println("Sleeping for 30 minutes...")
 
+        time.Sleep(30 * time.Minute)
 	}
 }
