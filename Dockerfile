@@ -9,6 +9,8 @@ RUN go mod install
 
 COPY . .
 
+RUN go mod tidy
+
 RUN go build -o main .
 
 # Execute stage
