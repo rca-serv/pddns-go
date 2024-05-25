@@ -1,4 +1,3 @@
-
 package main
 
 import (
@@ -9,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 )
 
 const (
@@ -81,65 +81,74 @@ func main() {
 		}
 	}
 
-	// Get local IP address
-	localIP, err := getLocalIPAddress(interfaceName)
-	if err != nil {
-		fmt.Printf("Error getting local IP address: %v\n", err)
-		return
-	}
+	for {
 
-	// Create record
-	record := Record{
-		Content:  localIP,
-		Name:     fmt.Sprintf("%s.%s.", ownName, zoneName),
-		TTL:      ttl,
-		Type:     "A",
-		Disabled: false,
-	}
+		// Get local IP address
+		localIP, err := getLocalIPAddress(interfaceName)
+		if err != nil {
+			fmt.Printf("Error getting local IP address: %v\n", err)
+			return
+		}
 
-	rrset := RRSet{
-		Name:       record.Name,
-		Type:       record.Type,
-		TTL:        record.TTL,
-		ChangeType: "REPLACE",
-		Records:    []Record{record},
-	}
+		// Create record
+		record := Record{
+			Content:  localIP,
+			Name:     fmt.Sprintf("%s.%s.", ownName, zoneName),
+			TTL:      ttl,
+			Type:     "A",
+			Disabled: false,
+		}
 
-	update := DNSUpdate{
-		RRSets: []RRSet{rrset},
-	}
+		rrset := RRSet{
+			Name:       record.Name,
+			Type:       record.Type,
+			TTL:        record.TTL,
+			ChangeType: "REPLACE",
+			Records:    []Record{record},
+		}
 
-	// Encode to JSON
-	body, err := json.Marshal(update)
-	if err != nil {
-		fmt.Printf("Error encoding JSON: %v\n", err)
-		return
-	}
+		update := DNSUpdate{
+			RRSets: []RRSet{rrset},
+		}
 
-	// Send request to PowerDNS server
-	powerDNSAPIURL := fmt.Sprintf("http://%s/api/v1/servers/localhost/zones/%s", pdnsServer, zoneName)
-	req, err := http.NewRequest("PATCH", powerDNSAPIURL, bytes.NewBuffer(body))
-	if err != nil {
-		fmt.Printf("Error creating request: %v\n", err)
-		return
-	}
+		// Encode to JSON
+		body, err := json.Marshal(update)
+		if err != nil {
+			fmt.Printf("Error encoding JSON: %v\n", err)
+			return
+		}
 
-	// Set headers
-	req.Header.Set("X-API-Key", apiKey)
-	req.Header.Set("Content-Type", "application/json")
+		// Send request to PowerDNS server
+		powerDNSAPIURL := fmt.Sprintf("http://%s/api/v1/servers/localhost/zones/%s", pdnsServer, zoneName)
+		req, err := http.NewRequest("PATCH", powerDNSAPIURL, bytes.NewBuffer(body))
+		if err != nil {
+			fmt.Printf("Error creating request: %v\n", err)
+			return
+		}
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Printf("Error sending request: %v\n", err)
-		return
-	}
-	defer resp.Body.Close()
+		// Set headers
+		req.Header.Set("X-API-Key", apiKey)
+		req.Header.Set("Content-Type", "application/json")
 
-	// Check response
-	if resp.StatusCode != http.StatusNoContent {
-		fmt.Printf("Request failed: status code %d\n", resp.StatusCode)
-	} else {
-		fmt.Println("Resource record updated successfully!")
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			fmt.Printf("Error sending request: %v\n", err)
+			return
+		}
+		defer resp.Body.Close()
+
+		// Check response
+		if resp.StatusCode != http.StatusNoContent {
+			fmt.Printf("Request failed: status code %d\n", resp.StatusCode)
+		} else {
+			fmt.Println("Resource record updated successfully!")
+		}
+
+
+        // Sleep for 30 minutes
+        // TODO: 時間を上書きできるようにする
+        time.Sleep(30 * time.Minute)
+
 	}
 }
